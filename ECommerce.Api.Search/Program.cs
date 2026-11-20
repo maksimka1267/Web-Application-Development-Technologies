@@ -1,3 +1,6 @@
+using ECommerce.Api.Search.Interfaces;
+using ECommerce.Api.Search.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -5,27 +8,20 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// HTTP-клиенты для взаимодействия между микросервисами
+builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<IOrdersService, OrdersService>();
+builder.Services.AddScoped<IProductsService, ProductsService>();
 
-builder.Services.AddHttpClient("Products", client =>
+builder.Services.AddHttpClient("OrdersService", client =>
 {
     client.BaseAddress = new Uri(
-        builder.Configuration["Services:Products"]!
-    );
+        builder.Configuration["Services:Orders"]!);
 });
 
-builder.Services.AddHttpClient("Customers", client =>
+builder.Services.AddHttpClient("ProductsService", client =>
 {
     client.BaseAddress = new Uri(
-        builder.Configuration["Services:Customers"]!
-    );
-});
-
-builder.Services.AddHttpClient("Orders", client =>
-{
-    client.BaseAddress = new Uri(
-        builder.Configuration["Services:Orders"]!
-    );
+        builder.Configuration["Services:Products"]!);
 });
 
 var app = builder.Build();
