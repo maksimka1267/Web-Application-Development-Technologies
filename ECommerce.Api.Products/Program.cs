@@ -1,62 +1,36 @@
-using ECommerce.Api.Products.Data;
-using ECommerce.Api.Products.Models;
+using ECommerce.Api.Products.Db;
+using ECommerce.Api.Products.Interfaces;
+using ECommerce.Api.Products.Profiles;
+using ECommerce.Api.Products.Providers;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Controllers
 builder.Services.AddControllers();
 
+// Database Context
+builder.Services.AddDbContext<ProductsDbContext>(options =>
+{
+    options.UseInMemoryDatabase("Products");
+});
+
+// Dependency Injection
+builder.Services.AddScoped<IProductsProvider, ProductsProvider>();
+
+// AutoMapper
+builder.Services.AddAutoMapper(typeof(ProductProfile));
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddDbContext<ProductsDbContext>(options =>
-    options.UseInMemoryDatabase("ProductsDatabase"));
 
 var app = builder.Build();
 
 // Swagger
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.MapControllers();
-
-// Начальные данные
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider
-        .GetRequiredService<ProductsDbContext>();
-
-    if (!context.Products.Any())
-    {
-        context.Products.AddRange(
-            new Product
-            {
-                Name = "Laptop",
-                Description = "Gaming laptop",
-                Price = 1500,
-                Stock = 10
-            },
-            new Product
-            {
-                Name = "Smartphone",
-                Description = "Modern smartphone",
-                Price = 800,
-                Stock = 20
-            },
-            new Product
-            {
-                Name = "Headphones",
-                Description = "Wireless headphones",
-                Price = 150,
-                Stock = 30
-            }
-        );
-
-        context.SaveChanges();
-    }
-}
 
 app.Run();

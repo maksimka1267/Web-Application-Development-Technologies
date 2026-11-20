@@ -1,91 +1,45 @@
-﻿using ECommerce.Api.Products.Data;
-using ECommerce.Api.Products.Models;
+﻿using ECommerce.Api.Products.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace ECommerce.Api.Products.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class ProductsController : ControllerBase
+namespace ECommerce.Api.Products.Controllers
 {
-    private readonly ProductsDbContext _context;
-
-    public ProductsController(ProductsDbContext context)
+    [ApiController]
+    [Route("api/products")]
+    public class ProductsController : ControllerBase
     {
-        _context = context;
-    }
+        private readonly IProductsProvider productsProvider;
 
-    // GET: api/products
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
-    {
-        return await _context.Products.ToListAsync();
-    }
+        public ProductsController(IProductsProvider productsProvider)
+        {
+            this.productsProvider = productsProvider;
+        }
 
-    // GET: api/products/1
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Product>> GetProduct(int id)
-    {
-        var product = await _context.Products.FindAsync(id);
+        // GET: api/products
+        [HttpGet]
+        public async Task<IActionResult> GetProductsAsync()
+        {
+            var result = await productsProvider.GetProductsAsync();
 
-        if (product == null)
-            return NotFound();
+            if (result.IsSuccess)
+            {
+                return Ok(result.Products);
+            }
 
-        return product;
-    }
+            return NotFound(result.ErrorMessage);
+        }
 
-    // POST: api/products
-    [HttpPost]
-    public async Task<ActionResult<Product>> CreateProduct(Product product)
-    {
-        product.Id = 0;
+        // GET: api/products/1
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetProductAsync(int id)
+        {
+            var result = await productsProvider.GetProductAsync(id);
 
-        _context.Products.Add(product);
+            if (result.IsSuccess)
+            {
+                return Ok(result.Product);
+            }
 
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(
-            nameof(GetProduct),
-            new { id = product.Id },
-            product
-        );
-    }
-
-    // PUT: api/products/1
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateProduct(
-        int id,
-        Product updatedProduct)
-    {
-        var product = await _context.Products.FindAsync(id);
-
-        if (product == null)
-            return NotFound();
-
-        product.Name = updatedProduct.Name;
-        product.Description = updatedProduct.Description;
-        product.Price = updatedProduct.Price;
-        product.Stock = updatedProduct.Stock;
-
-        await _context.SaveChangesAsync();
-
-        return NoContent();
-    }
-
-    // DELETE: api/products/1
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteProduct(int id)
-    {
-        var product = await _context.Products.FindAsync(id);
-
-        if (product == null)
-            return NotFound();
-
-        _context.Products.Remove(product);
-
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+            return NotFound(result.ErrorMessage);
+        }
     }
 }
