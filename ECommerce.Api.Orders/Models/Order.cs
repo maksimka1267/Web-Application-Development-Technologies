@@ -1,20 +1,15 @@
-﻿namespace ECommerce.Api.Orders.Models;
-
-public class Order
+﻿namespace ECommerce.Api.Orders.Models
 {
-    public int Id { get; set; }
+    public class Order
+    {
+        public int Id { get; set; }
 
-    public int CustomerId { get; set; }
+        public int CustomerId { get; set; }
 
-    public int ProductId { get; set; }
+        public DateTime OrderDate { get; set; }
 
-    public int Quantity { get; set; }
+        public decimal Total { get; set; }
 
-    public decimal UnitPrice { get; set; }
-
-    public DateTime OrderDate { get; set; }
-
-    public string Status { get; set; } = "Pending";
-
-    public decimal TotalPrice => Quantity * UnitPrice;
+        public List<OrderItem> Items { get; set; } = new();
+    }
 }

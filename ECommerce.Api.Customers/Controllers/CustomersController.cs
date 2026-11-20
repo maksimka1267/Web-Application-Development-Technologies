@@ -1,92 +1,46 @@
-﻿using ECommerce.Api.Customers.Data;
-using ECommerce.Api.Customers.Models;
+﻿using ECommerce.Api.Customers.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace ECommerce.Api.Customers.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class CustomersController : ControllerBase
+namespace ECommerce.Api.Customers.Controllers
 {
-    private readonly CustomersDbContext _context;
-
-    public CustomersController(CustomersDbContext context)
+    [ApiController]
+    [Route("api/customers")]
+    public class CustomersController : ControllerBase
     {
-        _context = context;
-    }
+        private readonly ICustomersProvider customersProvider;
 
-    // GET: api/customers
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
-    {
-        return await _context.Customers.ToListAsync();
-    }
+        public CustomersController(
+            ICustomersProvider customersProvider)
+        {
+            this.customersProvider = customersProvider;
+        }
 
-    // GET: api/customers/1
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Customer>> GetCustomer(int id)
-    {
-        var customer = await _context.Customers.FindAsync(id);
+        // GET: api/customers
+        [HttpGet]
+        public async Task<IActionResult> GetCustomersAsync()
+        {
+            var result = await customersProvider.GetCustomersAsync();
 
-        if (customer == null)
+            if (result.IsSuccess)
+            {
+                return Ok(result.Customers);
+            }
+
             return NotFound();
+        }
 
-        return customer;
-    }
+        // GET: api/customers/1
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetCustomerAsync(int id)
+        {
+            var result = await customersProvider.GetCustomerAsync(id);
 
-    // POST: api/customers
-    [HttpPost]
-    public async Task<ActionResult<Customer>> CreateCustomer(
-        Customer customer)
-    {
-        customer.Id = 0;
+            if (result.IsSuccess)
+            {
+                return Ok(result.Customer);
+            }
 
-        _context.Customers.Add(customer);
-
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(
-            nameof(GetCustomer),
-            new { id = customer.Id },
-            customer
-        );
-    }
-
-    // PUT: api/customers/1
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateCustomer(
-        int id,
-        Customer updatedCustomer)
-    {
-        var customer = await _context.Customers.FindAsync(id);
-
-        if (customer == null)
             return NotFound();
-
-        customer.FirstName = updatedCustomer.FirstName;
-        customer.LastName = updatedCustomer.LastName;
-        customer.Email = updatedCustomer.Email;
-        customer.Phone = updatedCustomer.Phone;
-
-        await _context.SaveChangesAsync();
-
-        return NoContent();
-    }
-
-    // DELETE: api/customers/1
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteCustomer(int id)
-    {
-        var customer = await _context.Customers.FindAsync(id);
-
-        if (customer == null)
-            return NotFound();
-
-        _context.Customers.Remove(customer);
-
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+        }
     }
 }
